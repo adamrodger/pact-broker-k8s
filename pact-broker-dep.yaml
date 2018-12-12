@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pact-broker
+  labels:
+    name: pact-broker
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: pact-broker
+    spec:
+      containers:
+      - name: pact-broker
+        image: dius/pact-broker
+        resources:
+          limits:
+            cpu: 300m
+            memory: 300Mi
+          requests:
+            cpu: 100m
+            memory: 150Mi
+        ports:
+        - containerPort: 80
+        envFrom:
+        - configMapRef:
+            name: pact-broker
+        #securityContext:
+        #  runAsNonRoot: true
+        #  runAsUser: 10001
+        #  capabilities:
+        #    drop:
+        #      - all
+        #    add:
+        #      - NET_BIND_SERVICE
+        #  readOnlyRootFilesystem: true
+        livenessProbe:
+          httpGet:
+            path: /diagnostic/status/heartbeat
+            port: 80
+          initialDelaySeconds: 300
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /diagnostic/status/heartbeat
+            port: 80
+          initialDelaySeconds: 180
+          periodSeconds: 3
+      nodeSelector:
+        beta.kubernetes.io/os: linux
